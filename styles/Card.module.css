@@ -11,6 +11,7 @@
 	box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.5);
 	background-color: #333;
 	color: #fff;
+  min-width: 150px;
 }
 
 .card .id {

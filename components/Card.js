@@ -1,18 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
+import React from "react";
 
 import styles from "../styles/Card.module.css"
 
 export default function Card({ pokemon }) {
 	const myLoader = () => {
-		return `https://cdn.traction.one/pokedex/pokemon/${pokemon.id}.png`;
+		return `${process.env.NEXT_PUBLIC_POKEDEX}${pokemon.id}.png`;
 	};
 
-	return (
+ 	return (
 		<div className={styles.card} >
 			<Image
 				loader={myLoader}
-				src={`https://cdn.traction.one/pokedex/pokemon/${pokemon.id}.png`}
+				src={`${process.env.NEXT_PUBLIC_POKEDEX}${pokemon.id}.png`}
 				width="120"
 				height="120"
 				alt={pokemon.name}
