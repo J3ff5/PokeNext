@@ -176,13 +176,15 @@ interface IEvolution {
   species: INameUrl;
 }
 
+export interface IChainEvolutionChain {
+  evolution_details: [IEvolutionDetails];
+  evolves_to: [IEvolution];
+  is_baby: boolean;
+  species: INameUrl;
+}
+
 export interface IChainEvolution {
   baby_trigger_item: INameUrl;
-  chain: {
-    evolution_details: [IEvolutionDetails];
-    evolves_to: [IEvolution];
-    is_baby: boolean;
-    species: INameUrl;
-  },
+  chain: IChainEvolutionChain;
   id: number;
 }

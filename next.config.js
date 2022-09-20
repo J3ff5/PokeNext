@@ -1,7 +1,7 @@
 const nextConfig = {
-	images: {
-		domains: ['cdn.traction.one'],
-	},
+  images: {
+    domains: ["cdn.traction.one"],
+  },
 };
 
 module.exports = nextConfig;

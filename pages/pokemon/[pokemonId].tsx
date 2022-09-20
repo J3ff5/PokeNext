@@ -1,15 +1,23 @@
 import React, { useCallback } from "react";
 import { useRouter } from "next/router";
-import Image from "next/image";
+import Image, { ImageLoader } from "next/image";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import styles from "../../styles/Pokemon.module.css";
-import { Egg, EggAltOutlined, EggAltTwoTone, EggOutlined, EggTwoTone, Map } from "@mui/icons-material";
+import {
+  Egg,
+  EggAltOutlined,
+  EggAltTwoTone,
+  EggOutlined,
+  EggTwoTone,
+  Map,
+} from "@mui/icons-material";
 import {
   EColorStat,
   EConvertNumber,
   EStat,
   IChainEvolution,
+  IChainEvolutionChain,
   IPlace,
   IPokemon,
   ISpecies,
@@ -22,7 +30,9 @@ export default function Pokemon() {
   const [location, setLocation] = React.useState<IPlace[]>([]);
   const [status, setStatus] = React.useState<IStats[]>([]);
   const [species, setSpecies] = React.useState<ISpecies>({} as ISpecies);
-  const [evolutionChain, setEvolutionChain] = React.useState<IChainEvolution>({} as IChainEvolution);
+  const [evolutionChain, setEvolutionChain] = React.useState<IChainEvolution>(
+    {} as IChainEvolution
+  );
 
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
@@ -70,10 +80,13 @@ export default function Pokemon() {
   }, [pokemonData]);
 
   const handlePlaceFound = () => {
+    setLoading(true);
+
     fetch(`${process.env.NEXT_PUBLIC_POKEMON}${id}/encounters`)
       .then((res) => res.json())
       .then((data) => {
         setLocation(data);
+        setLoading(false);
       });
   };
 
@@ -81,31 +94,33 @@ export default function Pokemon() {
     if (ger) {
       return `${EConvertNumber[ger?.replace("generation-", "")] + 1}° Geração `;
     } else {
-      return '';
+      return "";
     }
   };
 
   const showPlaces = React.useMemo(() => {
-    return location?.length !== 0 && (
-      <div className={styles.pokemon_row}>
-        <div className={styles.column_name}>Onde pode ser encontrado</div>
-        <div className={styles.column_value}>
-          <>
-            {location?.map((e, i) => (
-              <div key={`location_${i}`} className={styles.row_place}>
-                <Map className={styles.icon_map} />
-                <p>{e?.location_area?.name?.replace(/-/g, " ")}</p>
-              </div>
-            ))}
-          </>
+    return (
+      location?.length !== 0 && (
+        <div className={styles.pokemon_row}>
+          <div className={styles.column_name}>Onde pode ser encontrado</div>
+          <div className={styles.column_value}>
+            <>
+              {location?.map((e, i) => (
+                <div key={`location_${i}`} className={styles.row_place}>
+                  <Map className={styles.icon_map} />
+                  <p>{e?.location_area?.name?.replace(/-/g, " ")}</p>
+                </div>
+              ))}
+            </>
+          </div>
         </div>
-      </div>
+      )
     );
   }, [location]);
 
   const handleColorStst = (key: string) => {
     // console.log("color");
-    
+
     if (key) {
       document
         ?.getElementById(key)
@@ -118,15 +133,14 @@ export default function Pokemon() {
       <>
         <div className={styles.pokemon_row}>
           <div>
-            <EggTwoTone className={styles.icon_egg}/>
-            <EggTwoTone className={styles.icon_egg1}/>
-            <EggOutlined className={styles.icon_egg2}/>
-
+            <EggTwoTone className={styles.icon_egg} />
+            <EggTwoTone className={styles.icon_egg1} />
+            <EggOutlined className={styles.icon_egg2} />
           </div>
         </div>
       </>
     );
-  },[])
+  }, []);
 
   const showStats = React.useMemo(() => {
     return (
@@ -168,46 +182,105 @@ export default function Pokemon() {
     //   species?.evolution_chain?.url
     // );
     // const idEvolution = getLastElementInURL(species?.evolution_chain?.url)
-    const idEvolution = getLastElementInURL(url)
+    const idEvolution = getLastElementInURL(url);
     fetch(`${process.env.NEXT_PUBLIC_EVOLUTION}${idEvolution}`)
       .then((res) => res.json())
       .then((data) => {
-        // console.log({data})
+        console.log({ evolution: data });
         setEvolutionChain(data);
       })
       .catch(() => setEvolutionChain({} as IChainEvolution));
   };
 
   const showEvolution = React.useMemo(() => {
-    const evolution = evolutionChain?.chain?.evolves_to;
-    // console.log({ Evolve: evolutionChain?.chain });
-    // console.log({ evolution });
-    console.log({ evolutionChain });
-    
-    // console.log(
-    //   evolutionChain?.chain?.species?.name +
-    //     " -> " +
-    //     evolutionChain?.chain?.evolves_to[0]?.species?.name +
-    //     " -> " +
-    //     evolutionChain?.chain?.evolves_to[0]?.evolves_to[0].species.name
-    // );
-    return (
-      <div className={styles.row_place}>
-        <h3>Evoluções</h3>
-        <>
-          {/* {evolution?.map((e,i) => (
-            <div className={styles.evolve} key={i}>
-              <p>
-                {evolutionChain?.chain?.species?.name}
-                {" -> "}
-                {e?.species?.name}
-                {" -> "}
-                {e?.evolves_to[0]?.species?.name}
-              </p>
+    const replaceURL = (str: string) => {
+      return `${window.location.href.split("/").slice(0, -1).join("/")}/${str}`;
+    };
+    const deeping = (a: IChainEvolutionChain) => {
+      if (Array.isArray(a?.evolves_to) && a?.evolves_to.length >= 1) {
+        let urlImag = () =>
+          `${process.env.NEXT_PUBLIC_POKEDEX}${getLastElementInURL(
+            a?.species?.url
+          )}.png`;
+
+        console.log("if");
+
+        return (
+          <div className={styles.evolution_pokemon}>
+            <a href={replaceURL(getLastElementInURL(a?.species?.url))}>
+              <div className={styles.evolutions}>
+                <Image
+                  loader={urlImag}
+                  src={urlImag()}
+                  width="100"
+                  height="100"
+                  alt={a?.species?.name}
+                />
+
+                {`${a?.species?.name} - N°${getLastElementInURL(
+                  a?.species?.url
+                )}`}
+              </div>
+            </a>
+
+            <div className={styles.evolution_pokemon_plus}>
+              {a?.evolves_to.map((e, i) => {
+                const reponseDeeping = deeping(e);
+                let returnDeepingArray = String(reponseDeeping).split("°");
+                let urlImage2 = () =>
+                  `${process.env.NEXT_PUBLIC_POKEDEX}${
+                    returnDeepingArray[returnDeepingArray.length - 1]
+                  }.png`;
+                const whoIsThatPokemon = String(reponseDeeping).split(" - ")[0];
+
+                return (
+                  <>
+                    <a
+                      style={{ justifyContent: "center" }}
+                      key={a?.species?.name}
+                      href={replaceURL(
+                        getLastElementInURL(
+                          returnDeepingArray[returnDeepingArray.length - 1]
+                        )
+                      )}
+                    >
+                      <div className={styles.evolution_map}>
+                        {e?.evolves_to?.length < 1 && (
+                          <Image
+                            loader={urlImage2}
+                            src={`${process.env.NEXT_PUBLIC_POKEDEX}${
+                              returnDeepingArray[returnDeepingArray.length - 1]
+                            }.png`}
+                            width="100"
+                            height="100"
+                            alt={whoIsThatPokemon}
+                          />
+                        )}
+                        {reponseDeeping}
+                      </div>
+                    </a>
+                  </>
+                );
+              })}
             </div>
-          ))} */}
-        </>
-        <>{/* {console.log({evolutionChain})} */}</>
+          </div>
+        );
+      } else {
+        console.log("else");
+        return `${a?.species?.name} - N°${getLastElementInURL(
+          a?.species?.url
+        )}`;
+      }
+    };
+
+    return (
+      <div className={styles.pokemon_evolve}>
+        <div>
+          <h3>Evoluções</h3>
+        </div>
+        <div className={styles.pokemon_evolutions}>
+          {evolutionChain && deeping(evolutionChain.chain)}
+        </div>
       </div>
     );
   }, [evolutionChain]);
@@ -216,23 +289,19 @@ export default function Pokemon() {
     fetch(`${process.env.NEXT_PUBLIC_SPECIES}${id}`)
       .then((res) => res.json())
       .then((data: ISpecies) => {
-        console.log({data})
+        console.log({ Species: data });
         setSpecies(data);
-        handleChainEvolution(data.evolution_chain.url)
+        handleChainEvolution(data.evolution_chain.url);
       })
       .catch(() => setSpecies({} as ISpecies));
   };
 
   React.useEffect(() => {
-    status?.map((e, i) => handleColorStst(e?.stat?.name))
+    status?.map((e, i) => handleColorStst(e?.stat?.name));
   }, [status]);
 
   React.useEffect(() => {
-    // console.log('useEffect')
-    // console.log({id})
-
     if (id) {
-      // console.log('if (id) {')
       handlePokemon();
       handlePlaceFound();
       handleSpecies();
@@ -257,13 +326,9 @@ export default function Pokemon() {
       ) : (
         <CircularProgress />
       )}
-      {/* {showEggGroups()} */}
       {status?.length !== 0 && showStats}
       {location?.length !== 0 && showPlaces}
       {Object.keys(species).length !== 0 && showEvolution}
-      {/* <>
-        {console.log('//////////////////////////////////////////////')}
-      </> */}
     </div>
   );
 }
